@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cotizar · Club Runot</title>
+<!-- Cotizador de bolsillo para Karina: arma la cotización y la manda por WhatsApp. Sin IA, sin servidor. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cotizar Runot">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B0C10">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0B0C10; --card:#15131d; --line:#2A2D34; --violet:#7B2CF3; --lila:#B388FF; --plata:#BFC2C9; --txt:#F2F0F7; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:radial-gradient(circle at 50% 0, #1B1230, var(--bg) 60%) fixed; color:var(--txt);
+         font:16px/1.4 Montserrat, system-ui, sans-serif; padding:calc(16px + env(safe-area-inset-top)) 16px 40px; }
+  main { max-width:520px; margin:0 auto; }
+  header { text-align:center; margin-bottom:18px; }
+  header img { width:72px; height:72px; border-radius:50%; }
+  h1 { font:600 26px Cinzel, serif; letter-spacing:.08em; margin:8px 0 0; color:var(--lila); }
+  header p { margin:2px 0 0; color:var(--plata); font-size:13px; letter-spacing:.12em; text-transform:uppercase; }
+  fieldset { border:1px solid var(--line); border-radius:14px; background:var(--card); padding:14px; margin:0 0 14px; }
+  legend { padding:0 6px; color:var(--lila); font-weight:600; font-size:13px; letter-spacing:.08em; text-transform:uppercase; }
+  label { display:block; font-size:13px; color:var(--plata); margin:10px 0 4px; }
+  input, select, textarea { width:100%; font:inherit; font-size:16px; color:var(--txt); background:#0f0e15; border:1px solid var(--line);
+         border-radius:10px; padding:12px; }
+  input:focus, select:focus, textarea:focus { outline:2px solid var(--violet); border-color:transparent; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .chips { display:flex; gap:8px; }
+  .chips label { flex:1; margin:0; text-align:center; border:1px solid var(--line); border-radius:10px; padding:12px 4px; color:var(--txt); }
+  .chips input { display:none; }
+  .chips label:has(input:checked) { background:var(--violet); border-color:var(--violet); font-weight:600; }
+  .extra { display:grid; grid-template-columns:auto 1fr 130px; align-items:center; gap:10px; margin-top:10px; }
+  .extra input[type=checkbox] { width:22px; height:22px; accent-color:var(--violet); }
+  .extra span { font-size:15px; }
+  .aviso { color:#FFB4B4; font-size:13px; margin:6px 0 0; min-height:1em; }
+  .total { display:flex; justify-content:space-between; align-items:baseline; font-size:18px; }
+  .total b { font:600 26px Cinzel, serif; color:var(--lila); }
+  pre { white-space:pre-wrap; font:14px/1.45 Montserrat, sans-serif; background:#0f0e15; border:1px solid var(--line); border-radius:10px; padding:12px; margin:10px 0 0; }
+  button { width:100%; font:600 17px Montserrat, sans-serif; border:0; border-radius:12px; padding:16px; margin-top:10px; cursor:pointer; }
+  #enviar { background:#25D366; color:#062b14; }
+  #copiar { background:transparent; color:var(--txt); border:1px solid var(--line); }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="icon-180.png" alt="">
+    <h1>CLUB RUNOT</h1>
+    <p>Cotizador de eventos</p>
+  </header>
+
+  <form id="f" autocomplete="off">
+    <fieldset>
+      <legend>Cliente</legend>
+      <label for="nombre">Nombre</label>
+      <input id="nombre" placeholder="Ej: Camila">
+      <label for="fono">WhatsApp del cliente <small>(opcional)</small></label>
+      <input id="fono" type="tel" inputmode="tel" placeholder="9 1234 5678">
+    </fieldset>
+
+    <fieldset>
+      <legend>Evento</legend>
+      <label for="tipo">Tipo de evento</label>
+      <select id="tipo">
+        <option>Cumpleaños</option><option>Matrimonio</option><option>Evento de empresa</option>
+        <option>Fiesta privada</option><option>Graduación</option><option>Otro</option>
+      </select>
+      <div class="row">
+        <div><label for="fecha">Fecha</label><input id="fecha" type="date"></div>
+        <div><label for="personas">Personas</label><input id="personas" type="number" inputmode="numeric" min="100" max="700" value="100"></div>
+      </div>
+      <p class="aviso" id="aviso"></p>
+      <label>Jornada</label>
+      <div class="chips">
+        <label><input type="radio" name="jornada" value="Día" checked>Día</label>
+        <label><input type="radio" name="jornada" value="Noche">Noche</label>
+        <label><input type="radio" name="jornada" value="Día completo">Día completo</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Precio</legend>
+      <label for="arriendo">Valor del arriendo</label>
+      <input id="arriendo" type="number" inputmode="numeric" min="0" step="1000" value="200000">
+      <div class="extra"><input type="checkbox" id="conSonido"><span>Técnico de sonido</span><input id="sonido" type="number" inputmode="numeric" min="0" step="1000" placeholder="$"></div>
+      <div class="extra"><input type="checkbox" id="conAseo"><span>Aseo</span><input id="aseo" type="number" inputmode="numeric" min="0" step="1000" placeholder="$"></div>
+      <label for="nota">Nota para el cliente <small>(opcional)</small></label>
+      <textarea id="nota" rows="2" placeholder="Ej: la fecha queda reservada con un abono"></textarea>
+    </fieldset>
+
+    <fieldset>
+      <legend>Cotización</legend>
+      <div class="total"><span>Total</span><b id="total">$0</b></div>
+      <pre id="msg"></pre>
+      <button type="button" id="enviar">Enviar por WhatsApp</button>
+      <button type="button" id="copiar">Copiar texto</button>
+    </fieldset>
+  </form>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const clp = n => '$' + Math.round(n || 0).toLocaleString('es-CL');
+const num = id => Math.max(0, parseInt($(id).value, 10) || 0);
+
+// Chile: 9 dígitos que parten en 9 → 569XXXXXXXX. Vacío = WhatsApp deja elegir el chat.
+function fonoWa(v) {
+  const d = String(v).replace(/\D/g, '');
+  if (/^9\d{8}$/.test(d)) return '56' + d;
+  if (/^569\d{8}$/.test(d)) return d;
+  return d.length >= 8 ? d : '';
+}
+
+function fechaLarga(iso) {
+  if (!iso) return 'por definir';
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('es-CL', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+
+function armar() {
+  const jornada = document.querySelector('[name=jornada]:checked').value;
+  const personas = num('personas');
+  const sonido = $('conSonido').checked ? num('sonido') : 0;
+  const aseo = $('conAseo').checked ? num('aseo') : 0;
+  const total = num('arriendo') + sonido + aseo;
+  const nombre = $('nombre').value.trim();
+  const nota = $('nota').value.trim();
+
+  $('aviso').textContent = personas < 100 ? 'El mínimo para arrendar es de 100 personas.'
+                         : personas > 700 ? 'La capacidad máxima es de 700 personas.' : '';
+  $('total').textContent = clp(total);
+
+  const lineas = [
+    `¡Hola${nombre ? ' ' + nombre : ''}! 👋 Te comparto la cotización de *Club Runot* para tu ${$('tipo').value.toLowerCase()}:`,
+    '',
+    `📅 Fecha: ${fechaLarga($('fecha').value)}`,
+    `🕓 Jornada: ${jornada}`,
+    `👥 Personas: ${personas}`,
+    '',
+    '✅ *Incluye:* sonido, barra, custodia, salón VIP, sala de artistas con baño privado, hall de acceso, luces y técnico de luces. Acceso para personas con movilidad reducida.',
+    '',
+    `💰 Arriendo (${jornada.toLowerCase()}): ${clp(num('arriendo'))}`,
+    ...(sonido ? [`🎚️ Técnico de sonido: ${clp(sonido)}`] : []),
+    ...(aseo ? [`🧹 Aseo: ${clp(aseo)}`] : []),
+    `*Total: ${clp(total)}*`,
+    ...(nota ? ['', nota] : []),
+    '',
+    "📍 O'Higgins 25, esquina Prat, Concepción",
+    'Para reservar la fecha, respóndeme por acá. ¡Gracias!',
+    'Karina · Club Runot',
+  ];
+  $('msg').textContent = lineas.join('\n');
+  guardar();
+}
+
+// Recuerda los precios entre usos (solo en este teléfono).
+const recordar = ['arriendo', 'sonido', 'aseo'];
+function guardar() { try { recordar.forEach(k => localStorage.setItem('runot_' + k, $(k).value)); } catch (e) {} }
+try { recordar.forEach(k => { const v = localStorage.getItem('runot_' + k); if (v) $(k).value = v; }); } catch (e) {}
+
+$('f').addEventListener('input', armar);
+$('enviar').onclick = () => {
+  location.href = `https://wa.me/${fonoWa($('fono').value)}?text=${encodeURIComponent($('msg').textContent)}`;
+};
+$('copiar').onclick = async () => {
+  try { await navigator.clipboard.writeText($('msg').textContent); $('copiar').textContent = '¡Copiado!'; }
+  catch (e) { $('copiar').textContent = 'No se pudo copiar'; }
+  setTimeout(() => $('copiar').textContent = 'Copiar texto', 1500);
+};
+armar();
+
+// ponytail: autoprueba mínima, se corre abriendo la página con #test
+if (location.hash === '#test') {
+  console.assert(fonoWa('9 5323 9123') === '56953239123', 'fono 9 dígitos');
+  console.assert(fonoWa('+56 9 5323 9123') === '56953239123', 'fono con +56');
+  console.assert(fonoWa('') === '', 'fono vacío');
+  console.assert(clp(200000) === '$200.000', 'formato CLP');
+  console.log('autoprueba ok');
+}
+</script>
+</body>
+</html>
